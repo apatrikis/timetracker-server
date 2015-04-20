@@ -1,0 +1,39 @@
+<!--
+        the config file location may be specified on the command line like this:
+        -Dlogback.configurationFile=/path/to/config.xml
+        (see: http://logback.qos.ch/manual/configuration.html)
+-->
+<configuration debug="false" scan="false" scanPeriod="15 minutes">
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>[%d{HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>/path/output.log</file>
+		
+        <encoder>
+            <pattern>[%d{HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
+        </encoder>
+		
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logFile.%d{yyyy-MM-dd}.log.zip</fileNamePattern>
+			
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+			
+            <maxHistory>30</maxHistory>
+        </rollingPolicy>
+    </appender>
+
+    <logger name="com.prodyna.pac" level="debug">
+        <!-- appender-ref / -->
+    </logger>
+	
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </root>
+</configuration>

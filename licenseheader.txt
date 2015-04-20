@@ -1,0 +1,8 @@
+<#if licenseFirst??>
+${licenseFirst}
+</#if>
+${licensePrefix}PRODYNA PAC 2015 - Time Tracker
+${licensePrefix}Anastasios Patrikis
+<#if licenseLast??>
+${licenseLast}
+</#if>
