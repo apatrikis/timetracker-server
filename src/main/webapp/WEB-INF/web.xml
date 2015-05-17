@@ -26,17 +26,17 @@
     <login-config>
         <auth-method>BASIC</auth-method>
         <realm-name>timeTrackerRealm</realm-name>
-        <!-- realm-name>file</realm-name -->
     </login-config>
     <security-role>
+        <description>Simple project member</description>
         <role-name>USER</role-name>
     </security-role>
     <security-role>
-        <description/>
+        <description>Project manager</description>
         <role-name>MANAGER</role-name>
     </security-role>
     <security-role>
-        <description/>
+        <description>User and project administration</description>
         <role-name>ADMIN</role-name>
     </security-role>
 </web-app>
