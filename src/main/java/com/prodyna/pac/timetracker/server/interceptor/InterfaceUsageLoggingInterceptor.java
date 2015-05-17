@@ -85,7 +85,9 @@ public class InterfaceUsageLoggingInterceptor {
             sb.append("<null>");
         } else {
             for (Object obj : iCtx.getParameters()) {
-                sb.append(obj.toString()).append(", ");
+                if (obj != null) {
+                    sb.append(obj.toString()).append(", ");
+                }
             }
             int delPos = sb.length();
             sb.delete(delPos - 2, delPos);
