@@ -13,9 +13,4 @@
     <role-name>USER</role-name>
     <group-name>USER</group-name>
   </security-role-mapping>
-  <jsp-config>
-    <property name="keepgenerated" value="true">
-      <description>Keep a copy of the generated servlet class' java code.</description>
-    </property>
-  </jsp-config>
 </glassfish-web-app>
