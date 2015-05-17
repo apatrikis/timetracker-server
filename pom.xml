@@ -5,6 +5,7 @@
     <artifactId>timetracker-server</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>war</packaging>
+    <!-- https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html -->
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
@@ -66,15 +67,20 @@
         </dependency>
         <dependency>
             <groupId>org.glassfish.main.extras</groupId>
-            <artifactId>glassfish-embedded-all</artifactId>
+            <artifactId>glassfish-embedded-web</artifactId>
             <version>4.1</version>
             <scope>provided</scope>
-        </dependency> 
+        </dependency>
         <dependency>
             <groupId>org.jboss.arquillian.container</groupId>
-            <!-- artifactId>arquillian-glassfish-managed-3.1</artifactId -->
             <artifactId>arquillian-glassfish-managed-3.1</artifactId>
             <version>1.0.0.CR4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jacoco</groupId>
+            <artifactId>org.jacoco.core</artifactId>
+            <version>0.7.4.201502262128</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -90,7 +96,7 @@
             <dependency>
                 <groupId>org.jboss.arquillian</groupId>
                 <artifactId>arquillian-bom</artifactId>
-                <version>1.1.7.Final</version>
+                <version>1.1.8.Final</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -122,6 +128,34 @@
                     <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
+            <plugin>
+                <!-- http://wiki.netbeans.org/MavenCodeCoverage -->
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.4.201502262128</version>
+                <executions>
+                    <execution>
+                        <id>prepare-jacoco</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <destFile>${project.build.directory}/coverage-reports/jacoco.exec</destFile>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report-jacoco</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <dataFile>${project.build.directory}/coverage-reports/jacoco.exec</dataFile>
+                            <outputDirectory>${project.build.directory}/coverage-reports</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <finalName>timetracker-server</finalName>
     </build>
@@ -143,4 +177,29 @@
         <failOnMissingWebXml>false</failOnMissingWebXml>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    <profiles>
+        <profile>
+            <!-- https://github.com/arquillian/arquillian-extension-jacoco -->
+            <!-- mvn test -Pjacoco -->
+            <id>jacoco</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>org.jacoco.core</artifactId>
+                    <version>0.7.4.201502262128</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.jboss.arquillian.extension</groupId>
+                    <artifactId>arquillian-jacoco</artifactId>
+                    <version>1.0.0.Alpha8</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                </plugins>
+            </build>
+        </profile>    
+    </profiles>
 </project>
