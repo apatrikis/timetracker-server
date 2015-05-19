@@ -101,6 +101,23 @@ public class SecurityREST extends AbstractREST {
         return Response.ok().build();
     }
 
+    /**
+     * Reset the password of a user.
+     *
+     * @param settings The values for changing the password.
+     * @return The {@link Response.Status#OK}
+     * @throws java.security.NoSuchAlgorithmException if the provided password
+     * cannot be hashed.
+     */
+    @POST
+    @Path("reset")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @RolesAllowed(EmployeeRole.ROLE_ADMIN)
+    public Response resetPasswd(ChangePassword settings) throws NoSuchAlgorithmException {
+        securityServices.resetPassword(settings);
+        return Response.ok().build();
+    }
+
     @Override
     public BusinessServiceMXBean getMonitorBean() {
         return null;

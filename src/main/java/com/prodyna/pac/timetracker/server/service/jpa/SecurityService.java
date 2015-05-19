@@ -48,4 +48,12 @@ public class SecurityService extends AbstractService implements SecurityServices
             throw new PasswordChangeException("Old password is incorrect.");
         }
     }
+
+    @Override
+    public void resetPassword(ChangePassword settings) throws NoSuchAlgorithmException {
+        Employee employee = em.find(Employee.class, settings.getEmail());
+        employee.setPassword(Security.passwordHashSHA256(settings.getNewPassword()));
+        em.merge(employee);
+        log.info("reset password for {}", settings.getEmail());
+    }
 }

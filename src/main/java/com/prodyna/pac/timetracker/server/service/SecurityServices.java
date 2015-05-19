@@ -25,4 +25,14 @@ public interface SecurityServices {
      * cannot be hashed.
      */
     void changePassword(ChangePassword settings) throws PasswordChangeException, NoSuchAlgorithmException;
+
+    /**
+     * Reset the user password.
+     *
+     * @param settings Adminstrative reset of password: the provided value of
+     * the current passwort will be ignored.
+     * @throws java.security.NoSuchAlgorithmException if the provided password
+     * cannot be hashed.
+     */
+    void resetPassword(ChangePassword settings) throws NoSuchAlgorithmException;
 }
