@@ -92,6 +92,28 @@ public class SecurityRESTTest {
     }
 
     /**
+     * Test retrieve own information.
+     */
+    @Test
+    @RunAsClient
+    public void test01_WhoAmI() {
+        Assume.assumeNotNull(employee);
+
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        Response get = target.request(MediaType.APPLICATION_JSON).get();
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
+
+        Employee employeeResponse = null;
+        try {
+            employeeResponse = get.readEntity(Employee.class);
+        }
+        catch (Exception e) {
+            Assert.fail("Expected Emplpoyee.class: " + e.getMessage());
+        }
+        Assert.assertTrue(String.format("Expected Employee email [%s], received: %s", employee.getEmail(), employeeResponse.getEmail()), employee.getEmail().equals(employeeResponse.getEmail()));
+    }
+
+    /**
      * Test checking login creedentials with a missing role.
      */
     @Test
