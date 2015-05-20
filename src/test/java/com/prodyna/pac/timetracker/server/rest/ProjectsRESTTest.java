@@ -208,6 +208,30 @@ public class ProjectsRESTTest {
     }
 
     /**
+     * Test fining all {@link Project}s matching a search pattern.
+     */
+    @Test
+    @RunAsClient
+    public void test02_FindByManager() {
+        Assume.assumeNotNull(employee, project);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS_PATH, employee);
+        Response get = target.path(RESTConfig.EMPLOYEES_PATH).path(employee.getEmail()).request(MediaType.APPLICATION_JSON).get();
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
+
+        List<Project> projects = null;
+        try {
+            projects = get.readEntity(new GenericType<List<Project>>() {
+            });
+        }
+        catch (Exception e) {
+            Assert.fail(e.getMessage());
+        }
+        Assert.assertNotNull("List expected", projects);
+        Assert.assertTrue(String.format("Expected List with one element, received: %d", projects.size()), projects.size() == 1);
+        Assert.assertTrue(String.format("Expected Project ID [%s], received: %s", project.getProjectId(), projects.get(0).getProjectId()), projects.get(0).getProjectId().equals(project.getProjectId()));
+    }
+
+    /**
      * Test crating an incomplete {@link Project}.
      */
     @Test

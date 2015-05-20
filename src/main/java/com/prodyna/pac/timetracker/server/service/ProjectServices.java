@@ -4,6 +4,7 @@
  */
 package com.prodyna.pac.timetracker.server.service;
 
+import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.entity.Project;
 import java.util.List;
 
@@ -57,4 +58,12 @@ public interface ProjectServices {
      * @return The {@link List} of matching {@link Project}s.
      */
     List<Project> find(String searchPattern);
+
+    /**
+     * Find all {@link Project}s managed by the specified {@link Employee}.
+     *
+     * @param manager The manager to check.
+     * @return The {@link List} of matching {@link Project}s.
+     */
+    List<Project> findByManager(Employee manager);
 }

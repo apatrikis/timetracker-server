@@ -8,6 +8,7 @@ import com.prodyna.pac.timetracker.entity.EmployeeRole;
 import com.prodyna.pac.timetracker.entity.Project;
 import com.prodyna.pac.timetracker.server.monitoring.BusinessServiceMXBean;
 import com.prodyna.pac.timetracker.server.monitoring.ProjectsMonitor;
+import com.prodyna.pac.timetracker.server.service.EmployeeServices;
 import com.prodyna.pac.timetracker.server.service.ProjectServices;
 import java.net.URI;
 import java.util.List;
@@ -38,6 +39,9 @@ public class ProjectsREST extends AbstractREST {
 
     @Inject
     private ProjectServices projectService;
+
+    @Inject
+    private EmployeeServices employeeServices;
 
     @Inject
     private ProjectsMonitor jmxMonitor;
@@ -138,6 +142,17 @@ public class ProjectsREST extends AbstractREST {
     @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER})
     public Response find(@PathParam("searchPattern") String searchPattern) {
         List<Project> projects = projectService.find(searchPattern);
+        GenericEntity<List<Project>> responseEntity = new GenericEntity<List<Project>>(projects) {
+        };
+        return Response.ok(responseEntity).build();
+    }
+
+    @GET
+    @Path(RESTConfig.EMPLOYEES_PATH + "/{email}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER})
+    public Response findByManager(@PathParam("email") String email) {
+        List<Project> projects = projectService.findByManager(employeeServices.read(email));
         GenericEntity<List<Project>> responseEntity = new GenericEntity<List<Project>>(projects) {
         };
         return Response.ok(responseEntity).build();

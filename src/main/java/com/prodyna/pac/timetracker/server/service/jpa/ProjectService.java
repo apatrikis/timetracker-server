@@ -4,6 +4,7 @@
  */
 package com.prodyna.pac.timetracker.server.service.jpa;
 
+import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.entity.Project;
 import com.prodyna.pac.timetracker.server.service.ProjectServices;
 import java.util.ArrayList;
@@ -11,6 +12,7 @@ import java.util.List;
 import javax.ejb.Local;
 import javax.ejb.Stateless;
 import javax.inject.Inject;
+import javax.persistence.Query;
 import org.slf4j.Logger;
 
 /**
@@ -68,5 +70,12 @@ public class ProjectService extends AbstractService implements ProjectServices {
             }
             return ret;
         }
+    }
+
+    @Override
+    public List<Project> findByManager(Employee manager) {
+        Query q = em.createQuery("from Project p where p.owner = :employee");
+        q.setParameter("employee", manager);
+        return q.getResultList();
     }
 }
