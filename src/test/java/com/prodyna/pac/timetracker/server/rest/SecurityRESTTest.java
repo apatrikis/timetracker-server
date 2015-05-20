@@ -128,6 +128,43 @@ public class SecurityRESTTest {
     }
 
     /**
+     * Test changing a password.
+     */
+    @Test
+    @RunAsClient
+    public void test02_ResetPasswd() {
+        ChangePassword changePassword = new ChangePassword();
+        changePassword.setEmail(employee.getEmail());
+        changePassword.setCurrentPassword("this_will_be_ignored");
+        changePassword.setNewPassword("reset-" + employee.getPassword());
+        Entity<ChangePassword> json = Entity.json(changePassword);
+
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.SECURITY_PATH);
+        Response post = target.path("reset").request(MediaType.APPLICATION_JSON).post(json);
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.OK.getStatusCode());
+        employee.setPassword(changePassword.getNewPassword());
+    }
+
+    /**
+     * Test changing a password: this will fail becaus the execuing user must be
+     * an ADMIN.
+     */
+    @Test
+    @RunAsClient
+    public void test02_failResetPasswd() {
+        Assume.assumeNotNull(employee);
+        ChangePassword changePassword = new ChangePassword();
+        changePassword.setEmail(employee.getEmail());
+        changePassword.setCurrentPassword("this_will_be_ignored");
+        changePassword.setNewPassword("reset-" + employee.getPassword());
+        Entity<ChangePassword> json = Entity.json(changePassword);
+
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        Response post = target.path("reset").request(MediaType.APPLICATION_JSON).post(json);
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+    }
+
+    /**
      * Test changing a password with identical old and new password.
      */
     @Test
@@ -140,7 +177,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword(employee.getEmail());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee.getEmail(), "change-" + employee.getPassword());
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("change").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CONFLICT.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -157,11 +194,11 @@ public class SecurityRESTTest {
         Assume.assumeNotNull(employee);
         ChangePassword changePassword = new ChangePassword();
         changePassword.setEmail(employee.getEmail());
-        changePassword.setCurrentPassword(employee.getEmail());
+        changePassword.setCurrentPassword("wrong-" + employee.getEmail());
         changePassword.setNewPassword("new-" + employee.getEmail());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee.getEmail(), "change-" + employee.getPassword());
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("change").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, recieved: (%d) %s", Response.Status.CONFLICT.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
