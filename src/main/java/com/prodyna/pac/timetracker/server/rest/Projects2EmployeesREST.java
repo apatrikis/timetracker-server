@@ -70,7 +70,7 @@ public class Projects2EmployeesREST extends AbstractREST {
     @POST
     @Path(RESTConfig.EMPLOYEES_PATH + "/{email}/" + RESTConfig.PROJECTS_PATH)
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed(EmployeeRole.ROLE_ADMIN)
+    @RolesAllowed(EmployeeRole.ROLE_MANAGER)
     public Response assignProject(@PathParam("email") String email, Project project) throws PrimaryKeyException {
         Project2Employee psm = new Project2Employee();
         psm.setProject(project);
@@ -116,7 +116,7 @@ public class Projects2EmployeesREST extends AbstractREST {
      */
     @DELETE
     @Path(RESTConfig.EMPLOYEES_PATH + "/{email}/" + RESTConfig.PROJECTS_PATH + "/{projectid}")
-    @RolesAllowed(EmployeeRole.ROLE_ADMIN)
+    @RolesAllowed(EmployeeRole.ROLE_MANAGER)
     public Response unassignProject(@PathParam("email") String email, @PathParam("projectid") String projectID) {
         List<Project2Employee> assignment = projectEmployeeServices.find(projectServices.read(projectID), employeeServices.read(email));
 
@@ -144,7 +144,7 @@ public class Projects2EmployeesREST extends AbstractREST {
     @POST
     @Path(RESTConfig.PROJECTS_PATH + "/{projectid}/" + RESTConfig.EMPLOYEES_PATH)
     @Consumes(MediaType.APPLICATION_JSON)
-    @RolesAllowed(EmployeeRole.ROLE_ADMIN)
+    @RolesAllowed(EmployeeRole.ROLE_MANAGER)
     public Response assignEmployee(@PathParam("projectid") String projectID, Employee employee) throws PrimaryKeyException {
         Project2Employee psm = new Project2Employee();
         psm.setProject(projectServices.read(projectID));
@@ -189,7 +189,7 @@ public class Projects2EmployeesREST extends AbstractREST {
      */
     @DELETE
     @Path(RESTConfig.PROJECTS_PATH + "/{projectid}/" + RESTConfig.EMPLOYEES_PATH + "/{email}")
-    @RolesAllowed(EmployeeRole.ROLE_ADMIN)
+    @RolesAllowed(EmployeeRole.ROLE_MANAGER)
     public Response unassignEmployee(@PathParam("projectid") String projectID, @PathParam("email") String email) {
         return unassignProject(email, projectID);
     }

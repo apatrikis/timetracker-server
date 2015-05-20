@@ -96,7 +96,7 @@ public class Projects2EmployeesRESTTest {
 
         // #1
         Entity<Project> json = Entity.json(project1);
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.EMPLOYEES_PATH);
         Response post = target.path(user.getEmail()).path(RESTConfig.PROJECTS_PATH).request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
@@ -115,7 +115,7 @@ public class Projects2EmployeesRESTTest {
     public void test01_AssignEmployee() {
         Assume.assumeNotNull(project1, manager);
         Entity<Employee> json = Entity.json(manager);
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.PROJECTS_PATH);
         Response post = target.path(project1.getProjectId()).path(RESTConfig.EMPLOYEES_PATH).request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
@@ -148,6 +148,8 @@ public class Projects2EmployeesRESTTest {
         Assert.assertTrue(String.format("Expected Project id [%s], received: %s", project1.getProjectId(), assignments.get(0).getProjectId()), assignments.get(0).getProjectId().equals(project1.getProjectId()));
 
         // #2
+        target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        target = target.path(RESTConfig.EMPLOYEES_PATH);
         get = target.path(manager.getEmail()).path(RESTConfig.PROJECTS_PATH).request(MediaType.APPLICATION_JSON).get();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
 
@@ -190,6 +192,8 @@ public class Projects2EmployeesRESTTest {
         Assert.assertTrue(String.format("Expected Employee email [%s], received: %s", manager.getEmail(), assignments.get(0).getEmail()), assignments.get(0).getEmail().equals(manager.getEmail()));
 
         // #2
+        target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        target = target.path(RESTConfig.PROJECTS_PATH);
         get = target.path(project1.getProjectId()).path(RESTConfig.EMPLOYEES_PATH).request(MediaType.APPLICATION_JSON).get();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
 
@@ -214,7 +218,7 @@ public class Projects2EmployeesRESTTest {
         Assume.assumeNotNull(project1, project2, manager);
 
         // #1
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.EMPLOYEES_PATH);
         Response delete = target.path(user.getEmail()).path(RESTConfig.PROJECTS_PATH).path(project1.getProjectId()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
@@ -237,7 +241,7 @@ public class Projects2EmployeesRESTTest {
         Assume.assumeNotNull(project1, manager);
 
         // #1
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.PROJECTS_PATH);
         Response delete = target.path(project1.getProjectId()).path(RESTConfig.EMPLOYEES_PATH).path(manager.getEmail()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
