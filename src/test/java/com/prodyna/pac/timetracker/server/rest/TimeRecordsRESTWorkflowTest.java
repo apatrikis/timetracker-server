@@ -45,7 +45,8 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TimeRecordsRESTWorkflowTest {
 
-    private static Employee employee;
+    private static Employee user;
+    private static Employee manager;
     private static Project project;
 
     private static TimeRecord recordBefore;
@@ -67,7 +68,8 @@ public class TimeRecordsRESTWorkflowTest {
     @BeforeClass
     public static void setUpClass() {
         RESTClientHelper.ensureWebAppAndDefaultAdmin();
-        helpCreateEmployee();
+        user = helpCreateEmployee(EmployeeRole.USER);
+        manager = helpCreateEmployee(EmployeeRole.MANAGER);
         helpCreateProject();
         helpAssignProject();
     }
@@ -79,7 +81,8 @@ public class TimeRecordsRESTWorkflowTest {
     public static void tearDownClass() {
         helpUnassignProject();
         helpDeleteProject();
-        helpDeleteEmployee();
+        helpDeleteEmployee(user);
+        helpDeleteEmployee(manager);
     }
 
     @Before
@@ -96,13 +99,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test01_CreateOne() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T09:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T17:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
     }
@@ -113,13 +116,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test02_CreateOneBefore() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-30T09:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-30T17:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
         recordBefore = timeRecord;
@@ -131,13 +134,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test02_CreateOneAfter() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-02-01T09:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-02-01T17:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
         recordAfter = timeRecord;
@@ -149,13 +152,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test03_failCreateOneOverlapStart() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T08:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T12:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -169,13 +172,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test03_failCreateOneOverlapEnd() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T16:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T20:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -190,13 +193,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test03_failCreateOneWithinOther() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T10:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T14:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -211,13 +214,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test03_failCreateOneOverlayOther() {
-        Assume.assumeNotNull(employee, project);
-        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(employee, project);
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecord = RESTClientHelper.createTimeRecord(user, project);
         timeRecord.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T06:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         timeRecord.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T22:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(timeRecord);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -242,12 +245,12 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test05_ValidWorkflowTransition() {
-        Assume.assumeNotNull(employee, recordBefore);
+        Assume.assumeNotNull(user, recordBefore);
         recordBefore.setRecordStatus(TimeRecordStatus.READY_FOR_APPROVAL);
         Entity<TimeRecord> json = Entity.json(recordBefore);
 
         // update
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response put = target.request().put(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", put.getStatus(), put.toString()), put.getStatus() == Response.Status.OK.getStatusCode());
 
@@ -266,12 +269,12 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test05_InvalidWorkflowTransition() {
-        Assume.assumeNotNull(employee, recordAfter);
+        Assume.assumeNotNull(user, recordAfter);
         recordAfter.setRecordStatus(TimeRecordStatus.REWORK);
         Entity<TimeRecord> json = Entity.json(recordAfter);
 
         // update
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response put = target.request().put(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", put.getStatus(), put.toString()), put.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (put.getHeaderString("X-ServerException") != null) && (put.getHeaderString("X-ServerException").length() > 0));
@@ -286,14 +289,14 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test06_InvalidMoveToOverlap() {
-        Assume.assumeNotNull(employee, recordAfter);
+        Assume.assumeNotNull(user, recordAfter);
         recordAfter.setRecordStatus(TimeRecordStatus.EDITING);
         recordAfter.setStartTime(Date.from(ZonedDateTime.parse("2015-01-31T06:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         recordAfter.setEndTime(Date.from(ZonedDateTime.parse("2015-01-31T22:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
         Entity<TimeRecord> json = Entity.json(recordAfter);
 
         // Update
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         Response put = target.request().put(json);
         Assert.assertTrue(String.format("Response code not expected (%d): %s", put.getStatus(), put.toString()), put.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (put.getHeaderString("X-ServerException") != null) && (put.getHeaderString("X-ServerException").length() > 0));
@@ -307,22 +310,13 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test07_failUpdateforLockedProject() {
-        Assume.assumeNotNull(employee, project, recordBefore);
-
-        // assign "manager" role to employee to enable update of project data
-        Employee2Role employeeRole = RESTClientHelper.createEmployee2Role(employee, EmployeeRole.MANAGER);
-        employeeRole.setId("id-manager-" + employee.getEmail());
-        Entity<Employee2Role> jsonER = Entity.json(employeeRole);
-
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
-        Response post = target.request().post(jsonER);
-        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
+        Assume.assumeNotNull(manager, user, project, recordBefore);
 
         // lock project
         project.setLocked(true);
         Entity<Project> jsonProject = Entity.json(project);
 
-        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS_PATH, employee);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS_PATH, manager);
         Response put = target.request().put(jsonProject);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), put.getStatus(), put.toString()), put.getStatus() == Response.Status.OK.getStatusCode());
 
@@ -331,7 +325,7 @@ public class TimeRecordsRESTWorkflowTest {
         recordBefore.setRecordStatus(TimeRecordStatus.EDITING);
         Entity<TimeRecord> json = Entity.json(recordBefore);
 
-        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         put = target.request().put(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CONFLICT.getStatusCode(), put.getStatus(), put.toString()), put.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (put.getHeaderString("X-ServerException") != null) && (put.getHeaderString("X-ServerException").length() > 0));
@@ -342,7 +336,7 @@ public class TimeRecordsRESTWorkflowTest {
         project.setLocked(false);
         jsonProject = Entity.json(project);
 
-        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS_PATH, employee);
+        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS_PATH, manager);
         put = target.request().put(jsonProject);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), put.getStatus(), put.toString()), put.getStatus() == Response.Status.OK.getStatusCode());
     }
@@ -353,7 +347,7 @@ public class TimeRecordsRESTWorkflowTest {
     @Test
     @RunAsClient
     public void test08_DeleteAll() {
-        Assume.assumeNotNull(employee);
+        Assume.assumeNotNull(user);
         WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.TIMERECORDS_PATH);
         Response get = target.request(MediaType.APPLICATION_JSON).get();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
@@ -369,7 +363,7 @@ public class TimeRecordsRESTWorkflowTest {
         Assert.assertNotNull("List expected", timeRecords);
         Assert.assertTrue(String.format("Expected List with three elements, received: %d", timeRecords.size()), timeRecords.size() == 3);
 
-        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, employee);
+        target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
         for (TimeRecord record : timeRecords) {
             Response delete = target.path(record.getId()).request().delete();
             Assert.assertTrue(String.format("Response code not expected (%d): %s", delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
@@ -379,9 +373,9 @@ public class TimeRecordsRESTWorkflowTest {
     /**
      * Helper for creating a required {@link Employee} object.
      */
-    private static void helpCreateEmployee() {
+    private static Employee helpCreateEmployee(EmployeeRole role) {
         // create Employee
-        employee = RESTClientHelper.createEmployee("time-records-workflow", "test");
+        Employee employee = RESTClientHelper.createEmployee("time-records-workflow-" + role.toString(), "test");
         Entity<Employee> json = Entity.json(employee);
 
         WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES_PATH);
@@ -389,26 +383,26 @@ public class TimeRecordsRESTWorkflowTest {
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
 
         // create employee role assignment
-        Employee2Role employeeRole = RESTClientHelper.createEmployee2Role(employee, EmployeeRole.USER);
-        employeeRole.setId("id-user-" + employee.getEmail());
+        Employee2Role employeeRole = RESTClientHelper.createEmployee2Role(employee, role);
+        employeeRole.setId("id-" + employee.getEmail());
         Entity<Employee2Role> jsonER = Entity.json(employeeRole);
 
         target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
         post = target.request().post(jsonER);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
+
+        return employee;
     }
 
     /**
      * Helper for deleting a {@link Employee} object.
      */
-    private static void helpDeleteEmployee() {
+    private static void helpDeleteEmployee(Employee employee) {
         Assume.assumeNotNull(employee);
 
         // delete employ role assignment
         WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
-        Response delete = target.path("id-user-" + employee.getEmail()).request().delete();
-        Assert.assertTrue(String.format("Response code (%d) expected, received: %d (%s)", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
-        delete = target.path("id-manager-" + employee.getEmail()).request().delete();
+        Response delete = target.path("id-" + employee.getEmail()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: %d (%s)", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
 
         // delete employee
@@ -421,8 +415,8 @@ public class TimeRecordsRESTWorkflowTest {
      * Helper for creating a required {@link Project} object.
      */
     private static void helpCreateProject() {
-        Assume.assumeNotNull(employee);
-        project = RESTClientHelper.createProject("test-timerecord", employee);
+        Assume.assumeNotNull(manager);
+        project = RESTClientHelper.createProject("test-timerecord", manager);
         Entity<Project> json = Entity.json(project);
 
         WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS_PATH);
@@ -441,14 +435,14 @@ public class TimeRecordsRESTWorkflowTest {
     }
 
     /**
-     * Unassign the employee from the project.
+     * Assign the employee from the project.
      */
     private static void helpAssignProject() {
-        Assume.assumeNotNull(employee, project);
+        Assume.assumeNotNull(user, project);
         Entity<Project> json = Entity.json(project);
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.EMPLOYEES_PATH);
-        Response post = target.path(employee.getEmail()).path(RESTConfig.PROJECTS_PATH).request().post(json);
+        Response post = target.path(user.getEmail()).path(RESTConfig.PROJECTS_PATH).request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
     }
 
@@ -456,10 +450,10 @@ public class TimeRecordsRESTWorkflowTest {
      * Unassign the employee from the project.
      */
     private static void helpUnassignProject() {
-        Assume.assumeNotNull(employee, project);
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS2EMPLOYEES_PATH);
+        Assume.assumeNotNull(user, project);
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.PROJECTS2EMPLOYEES_PATH, manager);
         target = target.path(RESTConfig.EMPLOYEES_PATH);
-        Response delete = target.path(employee.getEmail()).path(RESTConfig.PROJECTS_PATH).path(project.getProjectId()).request().delete();
+        Response delete = target.path(user.getEmail()).path(RESTConfig.PROJECTS_PATH).path(project.getProjectId()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
     }
 }
