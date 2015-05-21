@@ -3,6 +3,6 @@
  * Anastasios Patrikis
  */
 /**
- * Package with classes that are used for {@code JMX Monitoruing}.
+ * Package with classes that are used for {@code JMX Monitoring}.
  */
 package com.prodyna.pac.timetracker.server.monitoring;
