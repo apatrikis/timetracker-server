@@ -6,6 +6,7 @@ package com.prodyna.pac.timetracker.server.rest;
 
 import com.prodyna.pac.timetracker.entity.EmployeeRole;
 import com.prodyna.pac.timetracker.entity.Project;
+import com.prodyna.pac.timetracker.server.exception.EntityDataException;
 import com.prodyna.pac.timetracker.server.monitoring.BusinessServiceMXBean;
 import com.prodyna.pac.timetracker.server.monitoring.ProjectsMonitor;
 import com.prodyna.pac.timetracker.server.service.EmployeeServices;
@@ -51,11 +52,13 @@ public class ProjectsREST extends AbstractREST {
      *
      * @param project The {@link Project} to store.
      * @return A {@link URI} to the newly created entry.
+     * @throws EntityDataException in case the date ranges are invalid.
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(EmployeeRole.ROLE_ADMIN)
-    public Response createOne(Project project) {
+    public Response createOne(Project project) throws EntityDataException {
+        project.checkDateValues(); // throws exception
         projectService.create(project);
         URI newObjectURI = URI.create(RESTConfig.PROJECTS_PATH + "/" + getURLEncodedString(project.getTitle()));
         return Response.created(newObjectURI).build();
@@ -83,11 +86,13 @@ public class ProjectsREST extends AbstractREST {
      *
      * @param project The {@link Project} to update.
      * @return The {@link Response.Status#OK}.
+     * @throws EntityDataException in case the date ranges are invalid.
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(EmployeeRole.ROLE_MANAGER)
-    public Response updateOne(Project project) {
+    public Response updateOne(Project project) throws EntityDataException {
+        project.checkDateValues();
         projectService.update(project);
         return Response.ok().build();
     }

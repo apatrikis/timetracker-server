@@ -238,14 +238,15 @@ public class ProjectsRESTTest {
     @RunAsClient
     public void testCreateOne_failNotNullConstraint() {
         Project prj = new Project();
-        prj.setProjectId("whatever");
+        prj.setProjectId("ValuesAreMissing");
         Entity<Project> json = Entity.json(prj);
 
         WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.PROJECTS_PATH);
         Response post = target.request().post(json);
-        String responseBody = post.readEntity(String.class);
-        Assert.assertTrue("Expected 'TransactionRolledback', received: " + responseBody, responseBody.contains("TransactionRolledback"));
-        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) (%s)", Response.Status.CONFLICT.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
+        Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
+        Assert.assertTrue("Header X-ServerException-Type with contend expected", (post.getHeaderString("X-ServerException-Type") != null) && (post.getHeaderString("X-ServerException-Type").length() > 0));
+        Assert.assertTrue("Header X-ServerException-Type of type [SearchParametersException] contend expected, found [%s]" + post.getHeaderString("X-ServerException-Type"), post.getHeaderString("X-ServerException-Type").contains("EntityDataException"));
     }
 
     /**
