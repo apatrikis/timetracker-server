@@ -77,7 +77,7 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
 
             ArrayList<String> whereClause = new ArrayList<>(5);
             HashMap<String, Object> parameters = new HashMap<>(5);
-            if (searchPattern.hasFrom()) {
+            if (searchPattern.hasEmployee()) {
                 whereClause.add("tr.owner = :employee");
                 parameters.put("employee", searchPattern.getEmployee());
             }
@@ -89,7 +89,7 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
                 whereClause.add("tr.startTime >= :from");
                 parameters.put("from", searchPattern.getFrom());
             }
-            if (searchPattern.hasFrom()) {
+            if (searchPattern.hasThrough()) {
                 whereClause.add("tr.endTime <= :through");
                 parameters.put("through", searchPattern.getThrough());
             }
