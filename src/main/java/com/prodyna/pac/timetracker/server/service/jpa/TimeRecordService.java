@@ -37,6 +37,7 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
 
     @Override
     public void create(TimeRecord timeRecord) throws EntityDataException, SearchParametersException {
+        checkStateTransitionIsValid(null, timeRecord.getRecordStatus());
         checkTimeRangeIsValid(timeRecord);
         checkProjectCanBeUsedForBoooking(timeRecord);
         em.persist(timeRecord);
@@ -49,9 +50,11 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
 
     @Override
     public void update(TimeRecord timeRecord) throws EntityDataException, SearchParametersException {
+        TimeRecord currentRecord = read(timeRecord.getId());
+        checkUpdateIsValid(currentRecord, timeRecord);
+        checkStateTransitionIsValid(currentRecord.getRecordStatus(), timeRecord.getRecordStatus());
         checkTimeRangeIsValid(timeRecord);
         checkProjectCanBeUsedForBoooking(timeRecord);
-        checkUpdateIsValid(read(timeRecord.getId()), timeRecord);
         em.merge(timeRecord);
     }
 
@@ -113,8 +116,6 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
      * @throws SearchParametersException
      */
     private void checkTimeRangeIsValid(TimeRecord timeRecord) throws EntityDataException, SearchParametersException {
-        checkStateTransitionIsValid(null, timeRecord.getRecordStatus());
-
         // No booking can span more then 24 hours
         long bookingHours = ChronoUnit.HOURS.between(timeRecord.getStartTime().toInstant(), timeRecord.getEndTime().toInstant());
         if (bookingHours >= 24) {
@@ -161,11 +162,9 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
      * @throws EntityDataException
      */
     private void checkUpdateIsValid(TimeRecord currentRecord, TimeRecord newRecord) throws EntityDataException {
-        checkStateTransitionIsValid(currentRecord.getRecordStatus(), newRecord.getRecordStatus());
-
         // values may change only for a EDITING records
         boolean hasChanges = !checkFieldsAreUnchanged(currentRecord, newRecord);
-        if (!TimeRecordStatus.EDITING.equals(newRecord.getRecordStatus())
+        if (!TimeRecordStatus.EDITING.equals(currentRecord.getRecordStatus())
                 && hasChanges) {
             String message = String.format("Only a EDITING TimeRecord may be updated: [%s]", currentRecord.toString());
             log.info(message);
