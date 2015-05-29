@@ -3,8 +3,8 @@
  * Anastasios Patrikis
  */package com.prodyna.pac.timetracker.server.service.jpa;
 
-import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.Security;
+import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.server.service.EmployeeServices;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class EmployeeService extends AbstractService implements EmployeeServices
     @Override
     public List<Employee> find(String searchPattern) {
         List<Employee> allMember;
-        allMember = em.createQuery("from Employee sm").getResultList();
+        allMember = em.createNamedQuery("Employee.findAll", Employee.class).getResultList();
 
         if ((searchPattern == null) || (searchPattern.length() == 0)) {
             return allMember;

@@ -55,7 +55,7 @@ public class Employee2RoleService extends AbstractService implements Employee2Ro
     public List<Employee2Role> find(Employee employee) {
         List<Employee2Role> employeeRoles;
 
-        employeeRoles = em.createQuery("from Employee2Role er where er.employee = :employee")
+        employeeRoles = em.createNamedQuery("Employee2Role.findByEmployee", Employee2Role.class)
                 .setParameter("employee", employee).getResultList();
         return employeeRoles;
     }
@@ -64,7 +64,7 @@ public class Employee2RoleService extends AbstractService implements Employee2Ro
     public List<Employee2Role> find(EmployeeRole role) {
         List<Employee2Role> employeeRoles;
 
-        employeeRoles = em.createQuery("from Employee2Role er where er.roleName = :role")
+        employeeRoles = em.createNamedQuery("Employee2Role.findByRole", Employee2Role.class)
                 .setParameter("role", role.toString()).getResultList();
         return employeeRoles;
     }

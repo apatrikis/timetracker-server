@@ -74,7 +74,7 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
         List<TimeRecord> timeRecords;
 
         if ((searchPattern == null) || (searchPattern.hasValueSet() == false)) {
-            timeRecords = em.createQuery("from TimeRecord tr").getResultList();
+            timeRecords = em.createNamedQuery("TimeRecord.findAll", TimeRecord.class).getResultList();
         } else {
             searchPattern.validate(); // throws exception
 

@@ -54,7 +54,7 @@ public class ProjectService extends AbstractService implements ProjectServices {
     @Override
     public List<Project> find(String searchPattern) {
         List<Project> allProjects;
-        allProjects = em.createQuery("from Project p").getResultList();
+        allProjects = em.createNamedQuery("Project.findAll", Project.class).getResultList();
 
         if ((searchPattern == null) || (searchPattern.length() == 0)) {
             return allProjects;
@@ -74,7 +74,7 @@ public class ProjectService extends AbstractService implements ProjectServices {
 
     @Override
     public List<Project> findByManager(Employee manager) {
-        Query q = em.createQuery("from Project p where p.owner = :employee");
+        Query q = em.createNamedQuery("Project.findByOwner", Project.class);
         q.setParameter("employee", manager);
         return q.getResultList();
     }

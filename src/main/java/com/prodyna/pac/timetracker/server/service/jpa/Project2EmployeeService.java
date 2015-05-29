@@ -60,7 +60,7 @@ public class Project2EmployeeService extends AbstractService implements Project2
     public List<Project> findProjects(Employee employee) {
         List<Project> projects;
 
-        projects = em.createQuery("select pe.project from Project2Employee pe where pe.employee = :employee")
+        projects = em.createNamedQuery("Project2Employee.findProjectByEmployee", Project.class)
                 .setParameter("employee", employee).getResultList();
         return projects;
     }
@@ -69,7 +69,7 @@ public class Project2EmployeeService extends AbstractService implements Project2
     public List<Employee> findEmployees(Project project) {
         List<Employee> employees;
 
-        employees = em.createQuery("select pe.employee from Project2Employee pe where pe.project = :project")
+        employees = em.createNamedQuery("Project2Employee.findEmployeeByProject", Employee.class)
                 .setParameter("project", project).getResultList();
         return employees;
     }
