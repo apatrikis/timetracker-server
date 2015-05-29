@@ -108,8 +108,9 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
     }
 
     /**
-     * Check if the {@link TimeRecord} time range is valid: this means the new
-     * record does not overlap with existing entries, and is less then 24 hours.
+     * Check if the {@link TimeRecord} time range is valid: e. g. this means the
+     * new record does not overlap with existing entries, the pasue is less then
+     * the booking time, and is less then 24 hours.
      *
      * @param timeRecord The new {@link TimeRecord} to check.
      * @throws EntityDataException
@@ -119,7 +120,15 @@ public class TimeRecordService extends AbstractService implements TimeRecordServ
         // No booking can span more then 24 hours
         long bookingHours = ChronoUnit.HOURS.between(timeRecord.getStartTime().toInstant(), timeRecord.getEndTime().toInstant());
         if (bookingHours >= 24) {
-            String message = String.format("TimeRecord [%s] spans more then 24 hours", timeRecord.toString());
+            String message = String.format("TimeRecord spans more then 24 hours : [%s]", timeRecord.toString());
+            log.info(message);
+            throw new EntityDataException(message);
+        }
+
+        // The pause must be less then the booking time
+        long bookingMinutes = ChronoUnit.MINUTES.between(timeRecord.getStartTime().toInstant(), timeRecord.getEndTime().toInstant());
+        if (bookingMinutes <= timeRecord.getPauseMinutes()) {
+            String message = String.format("TimeRecord has to lomg pause time : [%s]", timeRecord.toString());
             log.info(message);
             throw new EntityDataException(message);
         }

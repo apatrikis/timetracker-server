@@ -430,6 +430,27 @@ public class TimeRecordsRESTTest {
     }
 
     /**
+     * Test creating {@link TimeRecord} with too long pause time.
+     */
+    @Test
+    @RunAsClient
+    public void testCreateOne_failPauseMinutesTooLong() {
+        Assume.assumeNotNull(user, project);
+        TimeRecord timeRecordFail = RESTClientHelper.createTimeRecord(user, project);
+        timeRecordFail.setStartTime(Date.from(ZonedDateTime.parse("2015-01-30T09:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
+        timeRecordFail.setEndTime(Date.from(ZonedDateTime.parse("2015-01-30T10:00:00.000Z", DateTimeFormatter.ISO_DATE_TIME).toInstant()));
+        timeRecordFail.setPauseMinutes(60);
+        Entity<TimeRecord> json = Entity.json(timeRecordFail);
+
+        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.TIMERECORDS_PATH, user);
+        Response post = target.request().post(json);
+        Assert.assertTrue(String.format("Response code not expected (%d): %s", post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
+        Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
+        Assert.assertTrue("Header X-ServerException-Type with contend expected", (post.getHeaderString("X-ServerException-Type") != null) && (post.getHeaderString("X-ServerException-Type").length() > 0));
+        Assert.assertTrue("Header X-ServerException-Type of type [EntityDataException] contend expected, found [%s]" + post.getHeaderString("X-ServerException-Type"), post.getHeaderString("X-ServerException-Type").contains("EntityDataException"));
+    }
+
+    /**
      * Test deleting an undefined {@link TimeRecord}.
      */
     @Test
