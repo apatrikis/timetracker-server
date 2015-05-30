@@ -53,7 +53,7 @@ public class ArquillianHelper {
         WebArchive archive = ShrinkWrap.create(WebArchive.class, ARCHIVE_FILE_NAME + ".war")
                 .addAsLibraries(files)
                 .addPackages(true, "com.prodyna.pac")
-                .addAsResource(new File("src/test/resources-glassfish-managed/logback-test.xml"), "WEB-INF/classes/logback-test.xml")
+                .addAsResource(new File("src/test/resources-glassfish-managed/logback-test.xml"), "logback-test.xml")
                 .addAsResource(new File("src/test/resources-glassfish-managed/persistence-test.xml"), "META-INF/persistence.xml")
                 .addAsWebInfResource(new File("src/main/webapp/WEB-INF/beans.xml"))
                 .addAsWebInfResource(new File("src/main/webapp/WEB-INF/glassfish-web.xml"))

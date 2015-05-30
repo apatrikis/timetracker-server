@@ -6,7 +6,7 @@
 <configuration debug="false" scan="false" scanPeriod="15 minutes">
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
         </encoder>
     </appender>
 
@@ -14,7 +14,7 @@
         <file>/path/output-test.log</file>
 		
         <encoder>
-            <pattern>[%d{HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
+            <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
         </encoder>
 		
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
