@@ -4,7 +4,7 @@
  */
 package com.prodyna.pac;
 
-import com.prodyna.pac.timetracker.server.rest.RESTClientHelper;
+import com.prodyna.pac.timetracker.server.rest.AbstractRESTTest;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
@@ -85,6 +85,6 @@ public class ArquillianHelper {
      * IMPORTANT: ensure the base URL is set up for executing Arquillian tests.
      */
     private static void setArquillianBaseURL() {
-        RESTClientHelper.BASE_URL = RESTClientHelper.BASE_URL_ARQUILLIAN;
+        AbstractRESTTest.BASE_URL = AbstractRESTTest.BASE_URL_ARQUILLIAN;
     }
 }

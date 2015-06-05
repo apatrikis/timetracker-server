@@ -5,6 +5,7 @@
 package com.prodyna.pac.timetracker.server.rest;
 
 import com.prodyna.pac.ArquillianHelper;
+import com.prodyna.pac.timetracker.Security;
 import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.entity.Employee2Role;
 import com.prodyna.pac.timetracker.entity.EmployeeRole;
@@ -13,19 +14,22 @@ import com.prodyna.pac.timetracker.entity.TimeRecord;
 import com.prodyna.pac.timetracker.entity.TimeRecordStatus;
 import java.time.Instant;
 import java.util.Date;
+import javax.inject.Inject;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.transaction.UserTransaction;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.junit.Assert;
+import org.junit.Assume;
 
 /**
  * Utility class for {@code REST} test tasks.
  *
  * @author apatrikis
  */
-public class RESTClientHelper {
+public abstract class AbstractRESTTest {
 
     public static final String BASE_URL_JUNIT = "http://localhost:8080/timetracker-server/" + RESTConfig.REST_PATH;
     public static final String BASE_URL_ARQUILLIAN = "http://localhost:18080/" + ArquillianHelper.ARCHIVE_FILE_NAME + "/" + RESTConfig.REST_PATH;
@@ -33,6 +37,62 @@ public class RESTClientHelper {
 
     public static final String DEFAULT_ADMIN_USER = "ad.min@tt.com";
     public static final String DEFAULT_ADMIN_PASSWORD = "secret";
+
+    @PersistenceContext
+    private EntityManager em;
+
+    @Inject
+    private UserTransaction utx;
+
+    /**
+     * Abstract method to override in subclasses. This is used to create needed
+     * objects, like creating the administration account by invoking
+     * {@link #ensureDefaultAdmin()}.
+     * <p/>
+     * <b>Attention</b>: the overriding method must use the {@code @Test}
+     * annotation.
+     *
+     * @throws Exception in case an {@link Exception} is thrown.
+     *
+     * @see #test99_DeleteBaseObjects()
+     */
+    public abstract void initTest_CreateBaseObjects() throws Exception;
+
+    /**
+     * Create object required for all test cases.
+     */
+    public abstract void test00_CreateRequiredObjects();
+
+    /**
+     * Delete object which have been required for all tests.
+     */
+    public abstract void test99_DeleteRequiredObjects();
+
+    /**
+     * Ensure the default admin user is available.
+     *
+     * @throws Exception in case the there are problems while creating the
+     * default admin user.
+     *
+     * @see
+     * <a href=http://arquillian.org/guides/testing_java_persistence/">Arquillian
+     * and JPA</a>
+     */
+    protected void ensureDefaultAdmin() throws Exception {
+        // in case we run Arquillian tests, we need the admin user
+        if (em != null) {
+            Assume.assumeNotNull(utx);
+            utx.begin();
+            Employee adminUser = em.find(Employee.class, DEFAULT_ADMIN_USER);
+            if (adminUser == null) {
+                adminUser = createEmployee("ad", "min");
+                adminUser.setPassword(Security.passwordHashSHA256(DEFAULT_ADMIN_PASSWORD));
+                em.persist(adminUser);
+                em.persist(createEmployee2Role(adminUser, EmployeeRole.ADMIN));
+            }
+            utx.commit();
+        }
+    }
 
     /**
      * Create a {@link WebTarget} without authentication information.
@@ -84,16 +144,6 @@ public class RESTClientHelper {
      */
     public static final WebTarget createBasicAuthenticationClientForDefaultAdmin(String urlRelativePath) {
         return createBasicAuthenticationClient(urlRelativePath, DEFAULT_ADMIN_USER, DEFAULT_ADMIN_PASSWORD);
-    }
-
-    /**
-     * Ensure the WebApp is up an running, and the default admin user is
-     * available.
-     */
-    public static void ensureWebAppAndDefaultAdmin() {
-        WebTarget target = RESTClientHelper.createNoAuthenticationClient(RESTConfig.STATUS_PATH);
-        Response get = target.request().get();
-        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
     }
 
     /**

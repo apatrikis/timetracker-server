@@ -18,12 +18,8 @@ import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.container.test.api.RunAsClient;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Assume;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +32,7 @@ import org.junit.runners.MethodSorters;
  */
 @RunWith(Arquillian.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class SecurityRESTTest {
+public class SecurityRESTTest extends AbstractRESTTest {
 
     private static Employee employee;
     private static Employee2Role employeeRole;
@@ -51,26 +47,24 @@ public class SecurityRESTTest {
         return ArquillianHelper.createDeployment();
     }
 
-    /**
-     * Create objects needed multiple times.
-     */
-    @BeforeClass
-    public static void setUpClass() {
-        RESTClientHelper.ensureWebAppAndDefaultAdmin();
+    @Override
+    @Test
+    public void initTest_CreateBaseObjects() throws Exception {
+        ensureDefaultAdmin();
+    }
+
+    @Override
+    @Test
+    @RunAsClient
+    public void test00_CreateRequiredObjects() {
         helpCreateEmployee();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
+    @Override
+    @Test
+    @RunAsClient
+    public void test99_DeleteRequiredObjects() {
         helpDeleteEmployee();
-    }
-
-    @Before
-    public void setUp() {
-    }
-
-    @After
-    public void tearDown() {
     }
 
     /**
@@ -86,7 +80,7 @@ public class SecurityRESTTest {
         loginInfo.setEmployeeRole(EmployeeRole.valueOf(employeeRole.getRoleName()));
         Entity<LoginInfo> json = Entity.json(loginInfo);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path(EmployeeRole.ROLE_USER).request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.OK.getStatusCode());
     }
@@ -99,7 +93,7 @@ public class SecurityRESTTest {
     public void test01_WhoAmI() {
         Assume.assumeNotNull(employee);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response get = target.request(MediaType.APPLICATION_JSON).get();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
 
@@ -126,7 +120,7 @@ public class SecurityRESTTest {
         loginInfo.setEmployeeRole(EmployeeRole.MANAGER);
         Entity<LoginInfo> json = Entity.json(loginInfo);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path(EmployeeRole.ROLE_MANAGER).request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
@@ -144,7 +138,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword("change-" + employee.getPassword());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("change").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.OK.getStatusCode());
     }
@@ -161,7 +155,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword("reset-" + employee.getPassword());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.SECURITY_PATH);
+        WebTarget target = createBasicAuthenticationClientForDefaultAdmin(RESTConfig.SECURITY_PATH);
         Response post = target.path("reset").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.OK.getStatusCode());
         employee.setPassword(changePassword.getNewPassword());
@@ -181,7 +175,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword("reset-" + employee.getPassword());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("reset").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
@@ -199,7 +193,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword(employee.getEmail());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("change").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CONFLICT.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -220,7 +214,7 @@ public class SecurityRESTTest {
         changePassword.setNewPassword("new-" + employee.getEmail());
         Entity<ChangePassword> json = Entity.json(changePassword);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
+        WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
         Response post = target.path("change").request(MediaType.APPLICATION_JSON).post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, recieved: (%d) %s", Response.Status.CONFLICT.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CONFLICT.getStatusCode());
         Assert.assertTrue("Header X-ServerException with contend expected", (post.getHeaderString("X-ServerException") != null) && (post.getHeaderString("X-ServerException").length() > 0));
@@ -231,20 +225,20 @@ public class SecurityRESTTest {
     /**
      * Helper for creating a required {@link Employee} object.
      */
-    private static void helpCreateEmployee() {
+    private void helpCreateEmployee() {
         // create Employee
-        employee = RESTClientHelper.createEmployee("security", "test");
+        employee = createEmployee("security", "test");
         Entity<Employee> json = Entity.json(employee);
 
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES_PATH);
+        WebTarget target = createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES_PATH);
         Response post = target.request().post(json);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
 
         // create employee role assignment
-        employeeRole = RESTClientHelper.createEmployee2Role(employee, EmployeeRole.USER);
+        employeeRole = createEmployee2Role(employee, EmployeeRole.USER);
         Entity<Employee2Role> jsonER = Entity.json(employeeRole);
 
-        target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
+        target = createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
         post = target.request().post(jsonER);
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.CREATED.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.CREATED.getStatusCode());
     }
@@ -252,16 +246,16 @@ public class SecurityRESTTest {
     /**
      * Helper for deleting a {@link Employee} object.
      */
-    private static void helpDeleteEmployee() {
+    private void helpDeleteEmployee() {
         Assume.assumeNotNull(employeeRole, employee);
         // delete employee role assignment
-        WebTarget target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
+        WebTarget target = createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES2ROLES_PATH);
 
         Response delete = target.path(employeeRole.getId()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
 
         // delete employee
-        target = RESTClientHelper.createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES_PATH);
+        target = createBasicAuthenticationClientForDefaultAdmin(RESTConfig.EMPLOYEES_PATH);
         delete = target.path(employee.getEmail()).request().delete();
         Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), delete.getStatus(), delete.toString()), delete.getStatus() == Response.Status.OK.getStatusCode());
     }
