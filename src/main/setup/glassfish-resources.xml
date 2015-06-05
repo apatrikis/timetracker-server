@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE resources PUBLIC "-//GlassFish.org//DTD GlassFish Application Server 3.1 Resource Definitions//EN" "http://glassfish.org/dtds/glassfish-resources_1_5.dtd">
 <resources>
+    <!-- this is supposed to be deployed automatically on the server:
+    https://blogs.oracle.com/JagadishPrasath/entry/application_scoped_resources_in_glassfish
+    but it does not work:
+    https://netbeans.org/bugzilla/show_bug.cgi?id=243034
+    http://stackoverflow.com/questions/19530730/how-to-deploy-a-webapp-and-create-its-resources
+    it can be done manually on the server (server must be up and running):
+    http://javahowto.blogspot.de/2011/02/sample-glassfish-resourcesxml.html
+    -->
     <jdbc-resource
             enabled="true"
             jndi-name="jdbc/datasourceTimeTracker"
