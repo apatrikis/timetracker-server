@@ -9,7 +9,6 @@ import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.entity.Employee2Role;
 import com.prodyna.pac.timetracker.entity.EmployeeRole;
 import com.prodyna.pac.timetracker.pojo.ChangePassword;
-import com.prodyna.pac.timetracker.pojo.LoginInfo;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -74,15 +73,10 @@ public class SecurityRESTTest extends AbstractRESTTest {
     @RunAsClient
     public void test01_CheckCredentials() {
         Assume.assumeNotNull(employee);
-        LoginInfo loginInfo = new LoginInfo();
-        loginInfo.setEmail(employee.getEmail());
-        loginInfo.setPassword(employee.getPassword());
-        loginInfo.setEmployeeRole(EmployeeRole.valueOf(employeeRole.getRoleName()));
-        Entity<LoginInfo> json = Entity.json(loginInfo);
 
         WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
-        Response post = target.path(EmployeeRole.ROLE_USER).request(MediaType.APPLICATION_JSON).post(json);
-        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.OK.getStatusCode());
+        Response get = target.path(EmployeeRole.ROLE_USER).request().get();
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.OK.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.OK.getStatusCode());
     }
 
     /**
@@ -114,15 +108,10 @@ public class SecurityRESTTest extends AbstractRESTTest {
     @RunAsClient
     public void test01_failCheckCredentialsMissingRole() {
         Assume.assumeNotNull(employee);
-        LoginInfo loginInfo = new LoginInfo();
-        loginInfo.setEmail(employee.getEmail());
-        loginInfo.setPassword(employee.getPassword());
-        loginInfo.setEmployeeRole(EmployeeRole.MANAGER);
-        Entity<LoginInfo> json = Entity.json(loginInfo);
 
         WebTarget target = createBasicAuthenticationClient(RESTConfig.SECURITY_PATH, employee);
-        Response post = target.path(EmployeeRole.ROLE_MANAGER).request(MediaType.APPLICATION_JSON).post(json);
-        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), post.getStatus(), post.toString()), post.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        Response get = target.path(EmployeeRole.ROLE_MANAGER).request().get();
+        Assert.assertTrue(String.format("Response code (%d) expected, received: (%d) %s", Response.Status.INTERNAL_SERVER_ERROR.getStatusCode(), get.getStatus(), get.toString()), get.getStatus() == Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
     }
 
     /**
@@ -149,6 +138,7 @@ public class SecurityRESTTest extends AbstractRESTTest {
     @Test
     @RunAsClient
     public void test02_ResetPasswd() {
+        Assume.assumeNotNull(employee);
         ChangePassword changePassword = new ChangePassword();
         changePassword.setEmail(employee.getEmail());
         changePassword.setCurrentPassword("this_will_be_ignored");

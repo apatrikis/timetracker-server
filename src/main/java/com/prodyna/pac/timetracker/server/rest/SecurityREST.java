@@ -7,8 +7,6 @@ package com.prodyna.pac.timetracker.server.rest;
 import com.prodyna.pac.timetracker.entity.Employee;
 import com.prodyna.pac.timetracker.entity.EmployeeRole;
 import com.prodyna.pac.timetracker.pojo.ChangePassword;
-import com.prodyna.pac.timetracker.pojo.LoginInfo;
-import com.prodyna.pac.timetracker.server.exception.LoginException;
 import com.prodyna.pac.timetracker.server.exception.PasswordChangeException;
 import com.prodyna.pac.timetracker.server.monitoring.BusinessServiceMXBean;
 import com.prodyna.pac.timetracker.server.service.EmployeeServices;
@@ -49,15 +47,12 @@ public class SecurityREST extends AbstractREST {
     /**
      * Check if the login as {@link EmployeeRole#ROLE_USER} is possible
      *
-     * @param settings The login values.
      * @return The {@link Response.Status#OK}
-     * @throws LoginException in case the {@link LoginInfo} is invalid.
      */
-    @POST
+    @GET
     @Path(EmployeeRole.ROLE_USER)
-    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(EmployeeRole.ROLE_USER)
-    public Response checkCredentialsUser(LoginInfo settings) throws LoginException {
+    public Response checkCredentialsUser() {
         // noting to do: all checks made by app server
         return Response.ok().build();
     }
@@ -67,13 +62,11 @@ public class SecurityREST extends AbstractREST {
      *
      * @param settings The login values.
      * @return The {@link Response.Status#OK}
-     * @throws LoginException in case the {@link LoginInfo} is invalid.
      */
-    @POST
+    @GET
     @Path(EmployeeRole.ROLE_MANAGER)
-    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(EmployeeRole.ROLE_MANAGER)
-    public Response checkCredentialsManager(LoginInfo settings) throws LoginException {
+    public Response checkCredentialsManager() {
         // noting to do: all checks made by app server
         return Response.ok().build();
     }
@@ -83,13 +76,11 @@ public class SecurityREST extends AbstractREST {
      *
      * @param settings The login values.
      * @return The {@link Response.Status#OK}
-     * @throws LoginException in case the {@link LoginInfo} is invalid.
      */
-    @POST
+    @GET
     @Path(EmployeeRole.ROLE_ADMIN)
-    @Consumes(MediaType.APPLICATION_JSON)
     @RolesAllowed(EmployeeRole.ROLE_ADMIN)
-    public Response checkCredentialsAdmin(LoginInfo settings) throws LoginException {
+    public Response checkCredentialsAdmin() {
         // noting to do: all checks made by app server
         return Response.ok().build();
     }
