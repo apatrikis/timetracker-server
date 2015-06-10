@@ -19,7 +19,8 @@ Time Tracker is a self educational application for timesheet tracking. The appli
 - Java 1.8 Update 31 (http://www.oracle.com/technetwork/java/index.html)
 - IDE : Oracle NetBeans 8.0.2 (https://netbeans.org/downloads/, choose the `Java EE` edition)
 - JEE7 application server : Glassfish 4.1 (https://glassfish.java.net/download.html)
-- Database : Derby (included in NetBeans)
+- Database : Derby (included in NetBeans)  
+  For setup of runtime environment download `lib` version 10.11.1.1 (http://db.apache.org/derby/derby_downloads.html)
 - Testing : JUnit 4.11 (is specified in Maven POM)
 - Testing : Arquillian (is specified in Maven POM)
 - Dependency management : Maven 3.2.5 (http://maven.apache.org/download.cgi, not the version included in NetBeans)
@@ -54,11 +55,11 @@ The JEE7 application will use a datebase and deals with access permissions. Thes
 The `DB Connection Pool` and `JDBC Ressource` can be created with an resource file that comes with the scources. Glassfish must be up an running.
 ```
 <<glasfish_home>>\bin\asadmin start-domain
-<<glasfish_home>>\bin\asadmin --port 14848 --user admin add-resources <<root>>\timetracker-server\src\main\setup\glassfish-resources.xml
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 add-resources <<pathTo>>/timetracker-server/src/main/setup/glassfish-resources.xml
 ```
 
 For editing the `BASIC Authentication`, open http://localhost:4747/.
-In the navigation, go to `Configurations -> Server-config -> Security -> Realms -> JDBC Realm` and add a new entry.
+In the navigation, go to `Configurations -> server-config -> Security -> Realms -> JDBC Realm` and add a new entry.
 ```
 Name: timeTrackerRealm
 JAAS Context: jdbcRealm (must be exactly this value)
@@ -132,19 +133,30 @@ The directory structure will be extended:
 
 ### Requirements
 1. Unpack another Glassfish application server that will be used exclusively for CI.
-1. Open the servers web administration console and deploy `Jenkins`.
+1. Start the server, open the servers web administration console and deploy `Jenkins`.
 
-Usually, a real life project will have it's own CI server. For case of this demonstartion, we will install the CI application server on the same machine.
+Usually, a real life project will have it's own CI server.
+For case of this demonstartion, we will install the CI application server on the same machine.
 
 ### Initial configuration
 #### Configure Glassfish
 For simplicity, we assume no development is taking place when the CI application server is running. Otherwise, we would have to assign dedicated ports to the Glasfish server, the same way we did for the Arquillian server.
 
 #### Jenkins
-**<< TODO >>**
+The configuration of jenkins is related to
+- the general configuration of application paths like `JDK`, `GIT` and `Maven`
+- the project specific configuration, including
+  - where to find the sources
+  - which branches to build
+  - dependencies to other builds
+  - preconditions and postconditions
+
+A documentation off all this options is quiet excessive, therefore three configuration files are provided as a configuration reference.
+See : \timetracker-server\main\setup\jenkins
 
 ### Execution
-Jenkis is runnig within the application server and is checking the repository for changes automaticaly. In case of changes, a build is triggered without the need of manual intervention.
+Jenkis is runnig on http://localhost:8080/jenkins within the application server and is checking the repository for changes automaticaly.
+In case of changes and appropriate setup, a build is triggered without the need of manual intervention.
 
 Oppon successful build and test execution the created artifact usually would be uploaded automatically into a artifact repository like `Sonatype Nexus`.
 
@@ -154,15 +166,93 @@ The directory structure will be extended:
 \time-tracker
    \...
    \glassfish4-run
+   \derby
 ```
 
 ### Requirements
+1. Unpack the Derby archive
 1. Unpack another Glassfish application server that will be used for execution of the generated depoyment unit.
 
 ### Initial configuration
-Much like for development, the `JDBC` and `Security Reals` must be set up. The database is created using the scripts provided within the `timetracker-server` project.
 
+#### Derby database
+The database is created using the scripts provided within the `timetracker-server` project.
+Before executing the scripts the database needs to be started. For production, es assume the database is always up and running, so the databas has to started in network server mode.
+
+```
+\db-derby-10.4.1.3-bin\lib> java -jar derbyrun.jar -Dderby.system.home=/path/to/derby/home/dir server start
+```
+
+More documentation on running the database in network server mode or as embedded database can be found here:
+- http://db.apache.org/derby/docs/10.11/adminguide/index.html
+- http://db.apache.org/derby/papers/DerbyTut/ns_intro.html#ns_easier_way
+
+#### Glassfish
+
+In an runtime (production) environment the application sever will run multiple instances in a cluster.
+For the purpose of demonstration, the setup of cluster with two servers will be described.
+
+An easy-to-read documentation how to setup `Glassfish` `Cluster` : http://blog.c2b2.co.uk/2013/03/creating-simple-cluster-with-glassfish.html
+A complementary documentation : https://glassfish.java.net/docs/4.0/ha-administration-guide.pdf
+
+Applied to our infrastructure the following steps are required:
+
+```
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 create-cluster tt-cluster-1
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 create-node-config --nodehost localhost tt-node-1
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 create-local-instance --node tt-node-1 --cluster tt-cluster-1 --lbenabled true --checkports --savemasterpassword tt-instance-1
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 create-local-instance --node tt-node-1 --cluster tt-cluster-1 --lbenabled true --checkports --savemasterpassword tt-instance-2
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 start-cluster tt-cluster-1
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 list-instances
+```
+
+`create-local-instance` will display the ports used for communicating to the cluster, they can be found in the administartion console (and the `domain.xml` file).
+
+Much like for development, the `JDBC` and `Security Reals` must be set up.
 Again, we are running the application server on the same development machine, in a real world project this woud be a dedicated server. For simplicity, we assumme no development or CI server is up and running, so we do not have to change the port settings to avoid conflicts while running the application server and the database.
+
+For the setup instructions refer to the documentaion in the `Development Initial configuration` chapter.
+
+This time, the cluster setup requires the `--target` to be specified:
+```
+<<glasfish_home>>\bin\asadmin --user admin --host localhost --port 4848 add-resources --target tt-cluster-1 <<pathTo>>/timetracker-server/src/main/setup/glassfish-resources.xml
+```
+
+**Important : the manual realm setup is under node `tt-cluster-1-config` and not `server-config` as described above for develoment!**
+
+The last configuration is to prepare the cluster to be used with `Apache` `mod_jk`.
+
+Unfortunately the `High Availability Administration Guide` does not cover this topic.
+An documentation to this configuration can be found here : http://alexandru-ersenie.com/2009/08/18/glassfish-load-balancing-using-apache-and-mod_jk/
+and here : http://stackoverflow.com/questions/16293572/glassfish-instances-unable-to-startup-after-enabling-ajp
+
+```
+asadmin --user admin --host localhost --port 4848 create-jvm-options --target tt-cluster-1 -DjvmRoute=${AJP_INSTANCE_NAME}
+asadmin --user admin --host localhost --port 4848 create-jvm-options --target tt-cluster-1 -Dcom.sun.enterprise.web.connector.enableJK=${AJP_PORT}
+
+asadmin --user admin --host localhost --port 4848 create-system-properties --target tt-instance-1 AJP_INSTANCE_NAME=worker1
+asadmin --user admin --host localhost --port 4848 create-system-properties --target tt-instance-1 AJP_PORT=8109
+
+asadmin --user admin --host localhost --port 4848 create-system-properties --target tt-instance-2 AJP_INSTANCE_NAME=worker2
+asadmin --user admin --host localhost --port 4848 create-system-properties --target tt-instance-2 AJP_PORT=8209
+```
+
+**Important : the configuration for `AJP_INSTANCE_NAME` and `AJP_PORT` must match exacly later in the `mod_jk` configuration on the client side.**
+
+- restart the cluser to activate the configuration change
+
+```
+asadmin --user admin --host localhost --port 4848 stop-cluster tt-cluster-1
+asadmin --user admin --host localhost --port 4848 start-cluster tt-cluster-1
+asadmin --user admin --host localhost --port 4848 list-instances
+```
+
+More information about creating and maintaining a cluster can be found here:
+- https://glassfish.java.net/docs/4.0/
+- https://glassfish.java.net/docs/4.0/reference-manual.pdf
 
 ### Execution
 Open the servers web administration console and deploy the generated deployment unit `timetracker-server.war`.
+
+**Important** : the deployment target is the cluster!
+
