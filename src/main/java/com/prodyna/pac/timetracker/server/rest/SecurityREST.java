@@ -60,7 +60,6 @@ public class SecurityREST extends AbstractREST {
     /**
      * Check if the login as {@link EmployeeRole#ROLE_MANAGER} is possible
      *
-     * @param settings The login values.
      * @return The {@link Response.Status#OK}
      */
     @GET
@@ -74,7 +73,6 @@ public class SecurityREST extends AbstractREST {
     /**
      * Check if the login as {@link EmployeeRole#ROLE_ADMIN} is possible
      *
-     * @param settings The login values.
      * @return The {@link Response.Status#OK}
      */
     @GET
