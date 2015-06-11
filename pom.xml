@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.prodyna.pac</groupId>
     <artifactId>timetracker-server</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <packaging>war</packaging>
     <!-- https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html -->
     <dependencies>
@@ -39,13 +39,13 @@
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>timetracker-websocket-impl</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>timetracker-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>

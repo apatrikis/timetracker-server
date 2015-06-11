@@ -18,10 +18,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 /**
- *
- * @author apatrikis
- */
-/**
  * Test class for testing the {@code REST interface}
  * {@link Projects2EmployeesREST}.
  *
