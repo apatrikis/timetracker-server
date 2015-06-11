@@ -127,7 +127,7 @@ public class Employees2RolesREST extends AbstractREST {
     @GET
     @Path("employees/{email}")
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER})
+    @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER, EmployeeRole.ROLE_USER})
     public Response findByEmployee(@PathParam("email") String email) {
         List<Employee2Role> employees = employeeRoleServices.find(employeeServices.read(email));
 

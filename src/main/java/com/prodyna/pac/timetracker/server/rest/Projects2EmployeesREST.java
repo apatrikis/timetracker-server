@@ -96,7 +96,7 @@ public class Projects2EmployeesREST extends AbstractREST {
     @GET
     @Path(RESTConfig.EMPLOYEES_PATH + "/{email}/" + RESTConfig.PROJECTS_PATH)
     @Produces(MediaType.APPLICATION_JSON)
-    @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER})
+    @RolesAllowed({EmployeeRole.ROLE_ADMIN, EmployeeRole.ROLE_MANAGER, EmployeeRole.ROLE_USER})
     public Response readAllProjetcs(@PathParam("email") String email) {
         List<Project> assignments = projectEmployeeServices.findProjects(employeeServices.read(email));
         GenericEntity<List<Project>> responseEntity = new GenericEntity<List<Project>>(assignments) {
