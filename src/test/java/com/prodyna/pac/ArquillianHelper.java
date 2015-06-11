@@ -47,7 +47,7 @@ public class ArquillianHelper {
      */
     public static final WebArchive createDeployment() {
         // get all maven dependecies
-        File[] files = Maven.resolver().loadPomFromFile("pom.xml")
+        File[] files = Maven.resolver().loadPomFromFile("src/test/resources/arquillian-pom.xml")
                 .importRuntimeDependencies().resolve().withTransitivity().asFile();
 
         WebArchive archive = ShrinkWrap.create(WebArchive.class, ARCHIVE_FILE_NAME + ".war")
@@ -61,6 +61,7 @@ public class ArquillianHelper {
 
         setArquillianBaseURL();
 
+        // saveContentStructure(archive, new File("d:/temp/timetracker-server-arquillian.txt"));
         return archive;
     }
 

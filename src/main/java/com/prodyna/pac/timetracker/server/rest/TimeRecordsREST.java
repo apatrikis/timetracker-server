@@ -9,7 +9,10 @@ import com.prodyna.pac.timetracker.entity.EmployeeRole;
 import com.prodyna.pac.timetracker.entity.Project;
 import com.prodyna.pac.timetracker.entity.Project2Employee;
 import com.prodyna.pac.timetracker.entity.TimeRecord;
+import com.prodyna.pac.timetracker.entity.TimeRecordStatus;
 import com.prodyna.pac.timetracker.pojo.TimeRecordSearch;
+import com.prodyna.pac.timetracker.server.event.BookingForApporvalEvent;
+import com.prodyna.pac.timetracker.server.event.BookingForReworkEvent;
 import com.prodyna.pac.timetracker.server.exception.EntityDataException;
 import com.prodyna.pac.timetracker.server.exception.SearchParametersException;
 import com.prodyna.pac.timetracker.server.monitoring.BusinessServiceMXBean;
@@ -25,6 +28,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.security.RolesAllowed;
 import javax.ejb.Stateless;
+import javax.enterprise.event.Event;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -64,6 +68,12 @@ public class TimeRecordsREST extends AbstractREST {
     @Inject
     private TimeRecordsMonitor jmxMonitor;
 
+    @Inject
+    private Event<BookingForApporvalEvent> approvalEvent;
+
+    @Inject
+    private Event<BookingForReworkEvent> reworkEvent;
+
     /**
      * Store a {@link TimeRecord} entry.
      *
@@ -80,6 +90,15 @@ public class TimeRecordsREST extends AbstractREST {
     public Response createOne(TimeRecord timeRecord) throws EntityDataException, SearchParametersException {
         checkProjectEmployeeAssignment(timeRecord.getProject(), timeRecord.getOwner());
         timeRecordServices.create(timeRecord);
+
+        // notify manager
+        if (timeRecord.getRecordStatus() == TimeRecordStatus.READY_FOR_APPROVAL) {
+            if (approvalEvent != null) {
+                String msg = String.format("%s crated a new booking for approval in project %s", timeRecord.getOwner().getEmail(), timeRecord.getProject().getProjectId());
+                approvalEvent.fire(new BookingForApporvalEvent(timeRecord.getProject().getOwner().getEmail(), msg));
+            }
+        }
+
         URI newObjectURI = URI.create(RESTConfig.PROJECTS_PATH + "/" + getURLEncodedString(timeRecord.getId()));
         return Response.created(newObjectURI).build();
     }
@@ -117,6 +136,22 @@ public class TimeRecordsREST extends AbstractREST {
     public Response updateOne(TimeRecord timeRecord) throws EntityDataException, SearchParametersException {
         checkProjectEmployeeAssignment(timeRecord.getProject(), timeRecord.getOwner());
         timeRecordServices.update(timeRecord);
+
+        // notify manager
+        if (timeRecord.getRecordStatus() == TimeRecordStatus.READY_FOR_APPROVAL) {
+            if (approvalEvent != null) {
+                String msg = String.format("%s edited a booking for approval in project %s", timeRecord.getOwner().getEmail(), timeRecord.getProject().getProjectId());
+                approvalEvent.fire(new BookingForApporvalEvent(timeRecord.getProject().getOwner().getEmail(), msg));
+            }
+        }
+        // notify employee
+        if (timeRecord.getRecordStatus() == TimeRecordStatus.REWORK) {
+            if (reworkEvent != null) {
+                String msg = String.format("A booking is set for rework in project %s", timeRecord.getProject().getProjectId());
+                reworkEvent.fire(new BookingForReworkEvent(timeRecord.getOwner().getEmail(), msg));
+            }
+        }
+
         return Response.ok().build();
     }
 
