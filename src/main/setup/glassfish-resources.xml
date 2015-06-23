@@ -16,6 +16,17 @@
             pool-name="connectionPoolTimeTracker">
         <description>JDBC resource for TimeTracker</description>
     </jdbc-resource>
+
+    <admin-object-resource
+            enabled="true"
+            jndi-name="jms/ttTopicMessageForUser"
+            object-type="user"
+            res-adapter="jmsra"
+            res-type="javax.jms.Topic">
+        <description>TimeTracker topic for distributing a message in a Glassfish cluster.</description>
+        <property name="Name" value="ttTopicMessageForUser"/>
+    </admin-object-resource>
+    
     <jdbc-connection-pool 
             allow-non-component-callers="false"
             associate-with-thread="false"
