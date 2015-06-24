@@ -11,7 +11,7 @@
     </appender>
 
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/path/output-test.log</file>
+        <file>../logs/output-test.log</file>
 		
         <encoder>
             <pattern>[%d{yyyy-MM-dd HH:mm:ss.SSS}] [%thread] [%X{UUID}] [%-5level] %logger{36} -> %msg%n</pattern>
